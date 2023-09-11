@@ -2,6 +2,8 @@
 
 This repository serves as a comprehensive guide to effective data modeling and robust data quality assurance using popular open-source tools such as dbt and OpenMetadata. Dive into practical examples and best practices to elevate your data analytics projects.
 
+![architecture.png](images%2Farchitecture.png)
+
 # Understanding the Tools
 In this session, we'll familiarize ourselves with the key tools that power our data modeling and data quality journey: dbt and OpenMetadata. 
 ## dbt
@@ -27,12 +29,77 @@ OpenMatadata is a powerful open-source metadata management platform designed to 
 These key features of OpenMetadata make it a valuable addition to your data management toolkit, particularly when combined with dbt for data modeling and transformation. Together, these tools empower data professionals to build well-structured, high-quality analytics projects while maintaining control and visibility over their data assets.
 
 # Understanding the Modeling techniques
+Data modeling is a fundamental step in the process of designing and organizing data structures to meet specific business requirements. These modeling techniques serve as blueprints for how data will be stored, organized, and accessed within a database or data warehouse. Different modeling techniques are used based on the nature of the data and the specific needs of an organization. Your downstream use cases, data warehouse, raw source data, and the skills of your data team will all help determine which data modeling approach is most appropriate for your business. Here, we explore four widely used data modeling techniques:
+## Relational Model 
+- The Relational Model is one of the most established and widely used data modeling techniques. It is based on the principles of tables (relations) where data is organized into rows and columns. Each table represents an entity, and relationships between entities are established through keys.
+- This model is highly structured and enforces data integrity through constraints, making it suitable for transactional systems where data consistency is crucial.
+- Relational databases like MySQL, PostgreSQL, and Oracle Database commonly implement this model.
+#### Good fit for
+- Low volume data and a small number of data sources
+- Simple use cases for the data
+- Low-medium concern around data warehousing costs (because relational models often need joining to be made meaningful)
 
+## Dimensional Data Model
+- The Dimensional Data Model is primarily used for data warehousing and analytics. It focuses on simplifying complex data into a structure that is optimized for querying and reporting.
+- In this model, data is organized into two types of tables: dimension tables (containing descriptive attributes) and fact tables (containing numerical performance measures). These tables are connected through keys, enabling efficient multidimensional analysis.
+- Dimensional modeling is ideal for business intelligence and data analytics systems and is often associated with tools like Online Analytical Processing (OLAP) cubes.
 
+### Good fir for
+- Medium-to-large number of data sources
+- Centralized data teams
+- End-use case for data is primarily around business intelligence and providing insights
+- Teams that want to create an easily navigable and predictable data warehouse design
+
+## Entity-Relationship Data Model (ERD)
+- The Entity-Relationship Data Model is a conceptual modeling technique used to represent entities (objects or concepts) and the relationships between them.
+- Entities are represented as tables, relationships as lines connecting them, and attributes as columns. It helps visualize the structure of data and how entities interact.
+- ERDs are valuable in the early stages of database design for defining data requirements and understanding complex data relationships.
+### Good fit for
+- Low complexity data that connects neatly together
+- Simple, business-focused downstream use cases for the data
+- Central data teams that have deep knowledge of the facets of their data
+
+## Data Vault Model
+- The Data Vault Model is designed for building scalable and flexible data warehouses that can adapt to changing business requirements.
+- It consists of three core components: **hubs** (representing business entities), **links** (representing relationships between entities), and **satellites** (containing descriptive attributes).
+- Data Vault is known for its ability to handle incremental data loading and historical data, making it suitable for data integration and data warehouse architectures.
+### Good fir for
+- Enterprise teams where the ability to audit data is a primary concern
+- Teams that need flexibility and who want to make large structural changes to their data without causing delays in reporting
+- More technical data teams that can manage and govern the network-like growth of data vault models
+
+## Wide Table or One Big Table (OBT)
+OBT stands for one big table. As the name suggests, it refers to using a single table for housing all data in a single large table. This approach ensures the warehouse doesn't have to perform any joins on the fly. Due to its simplicity, OBT is good for small teams and small projects that are focused on tracking a specific item. This item is usually the one that has several attributes associated with it.
+
+There’s no clear “right” or “wrong” data modeling technique for your data and business. However, there are ones that are probably more appropriate and aligned with the skillsets of your team.
+
+# Hybrid Data Modeling Approach: Dimensional Model + One Big Table
+In this guide, we introduce a hybrid data modeling approach that combines the strengths of two distinct data modeling techniques: the Dimensional Model and the One Big Table. This approach is designed to create a versatile and efficient data analytics ecosystem that caters to the diverse requirements of your organization's users.
+## Dimensional Model for the Base Layer (Data Warehouse)
+- **Target Audience**: Power users, data analysts, and data engineers who are proficient in SQL and need to perform complex analytical queries.
+- **Key Characteristics**:
+  - Data is organized into structured star or snowflake schemas, optimizing query performance for analytical workloads.
+  - Normalization reduces data redundancy and enforces data integrity.
+  Fact tables contain numerical measures, and dimension tables provide context and attributes.
+  - Ideal for complex joins and aggregations required for in-depth analysis.
+- **Use Case**: The Dimensional model serves as the foundation of your data warehouse (DWH) for advanced analytics. It's the go-to layer for users who are comfortable writing SQL queries and require granular data for their analyses.
+
+## One Big Table for the Mart Layer (Business Users)
+- **Target Audience**: Business users, executives, and non-technical stakeholders who need simplified access to data for reporting and dashboards.
+- **Key Characteristics**:
+  - Data is denormalized into a single table, simplifying data structures and queries.
+  - Provides a flattened view of data, making it easy for business users to access and understand.
+  - Facilitates ad-hoc reporting and self-service analytics without the need for complex joins.
+  - Suitable for scenarios where query simplicity and speed are priorities.
+- **Use Case**: The One Big Table approach is implemented in the Mart layer, which acts as a user-friendly data mart. It allows business users to access data quickly, create reports, and gain insights without the need for extensive SQL knowledge.
 
 
 ## Supporting Links
 * <a href="https://www.getdbt.com/blog/data-modeling-techniques" target="_blank">4 data modeling techniques for modern data warehouses</a>
+* <a href="https://docs.getdbt.com/blog/kimball-dimensional-model" target="_blank">Building a Kimball dimensional model with dbt</a>
+* <a href="https://www.fivetran.com/blog/star-schema-vs-obt" target="_blank">Data warehouse modeling: Star schema vs OBT</a>
+* <a href="https://www.getdbt.com/analytics-engineering/modular-data-modeling-technique" target="_blank">Data modeling techniques for more modularity</a>
+* <a href="https://docs.getdbt.com/terms/dimensional-modeling" target="_blank">Dimensional modeling</a>
 * <a href="https://docs.getdbt.com/blog/kimball-dimensional-model" target="_blank">Building a Kimball dimensional model with dbt</a>
 
 
