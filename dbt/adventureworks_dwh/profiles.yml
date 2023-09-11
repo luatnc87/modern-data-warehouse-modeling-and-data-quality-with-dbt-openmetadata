@@ -1,0 +1,6 @@
+adventureworks_dwh:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '/data/duckdb/adventureworks_dwh.duckdb' # path to local DuckDB database file
