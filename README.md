@@ -14,6 +14,12 @@ dbt, which stands for Data Build Tool, is a command-line tool that revolutionize
 - **Incremental Builds**: dbt supports incremental builds, meaning it only processes data that has changed since the last run. This feature saves time and resources when working with large datasets.
 - **Orchestration**: While dbt focuses on data transformations and modeling, it can be integrated with orchestration tools like Apache Airflow or dbt Cloud to create automated data pipelines.
 
+## DuckDB
+DuckDB is an in-memory, columnar analytical database that stands out for its speed, efficiency, and compatibility with SQL standard. Here is a more in-deepth look at its features:
+- **High-performance Analytics**: DuckDB is optimized for analytical queries, making it an ideal choice for data warehousing and analytics workloads. It's in-memory storage and columnar data layout significantly boost query performance.
+- **SQL Compatibility**: DuckDB supports SQL, making it accessible to analysts and data professionals who are ready familiar with SQL syntax. This compatibility allows you to leverage your existing SQL knowledge and tools.
+- **Integration with BI Tools**: DuckDB integrates seamlessly with popular business intelligence (BI) tools like Tableau, Power BI, and Looker. This compatibility ensures that you can visualize and report on your data effectively.
+
 ## OpenMetadata
 OpenMatadata is a powerful open-source metadata management platform designed to streamline metadata management processes and enhance data governance. it offers a range of key features that are essential for maintaining data quality and ensuring effective data management within your analytics projects:
 - **Metadata Catalog**: OpenMetadata provides a centralized catalog for storing and managing metadata related to your data assets, including tables, databases, reports, and more. This catalog makes it easy to discover and access critical information about your data.
@@ -93,6 +99,84 @@ In this guide, we introduce a hybrid data modeling approach that combines the st
   - Suitable for scenarios where query simplicity and speed are priorities.
 - **Use Case**: The One Big Table approach is implemented in the Mart layer, which acts as a user-friendly data mart. It allows business users to access data quickly, create reports, and gain insights without the need for extensive SQL knowledge.
 
+# Setting up DuckDB, dbt, OpenMetadata, and Mate with Docker Compose
+## Setting up DuckDB
+DuckDB will be installed as a library with dbt in the next session.
+
+## Setting up dbt
+Firstly, We need to install *dbt-core* and *dbt-duckdb* libraries, then init a dbt project.
+```yaml
+# create a virtual environment
+cd dbt
+python -m venv .env
+source .env/bin/activate
+
+# install libraries: dbt-core and dbt-duckdb
+pip install -r requirements.txt
+
+# check version
+dbt --version
+```
+Then we initialize a dbt project with the name *stackoverflowsurvey* and create a *profiles.yml* with the following content:
+```yaml
+stackoverflow:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '/data/duckdb/adventureworks_dwh.duckdb' # path to local DuckDB database file
+```
+Run the following commands to properly check configuration:
+```bash
+# We need to point out the directory of the profiles.yml file, because we are not using the default location.
+dbt debug --profiles-dir .
+```
+## Setting up OpenMetadata
+
+## Setting up Mage
+
+## Setting up Slack bot for alerts
+
+
+# How to structure dbt project
+Start by creating a well-organized directory structure for your dbt project. The root directory might look something like this:
+
+```bash
+adventureworks_dwh/
+│   dbt_project.yml
+│   README.md
+│
+├── models/
+│   ├── base/
+│   ├── dimensions/
+│   ├── facts/
+│   ├── staging/
+│
+├── data/
+│   ├── raw/
+│   └── processed/
+│
+├── macros/
+│
+└── analysis/
+```
+- **models/**: This directory is where you will define your dbt models. Create subdirectories to separate different types of models, including **dimensions/** for dimension tables and **facts/** for fact tables.
+- **data/**: This directory can contain raw and processed data. Raw data might be stored in the raw/ directory, while processed data used by dbt can reside in the processed/ directory.
+- **macros/**: Store custom macros and SQL functions that you use across your dbt models.
+- **analysis/**: This directory can contain SQL scripts for ad-hoc analysis and queries.
+
+# Start building models
+
+# Ensuring data quality
+## Using dbt's default test capabilities
+
+## Integrating with great-expectation
+
+## Alerting with Slack
+
+# Making data it accessible,understandable and usable for users
+
+# Conclusion
 
 ## Supporting Links
 * <a href="https://www.getdbt.com/blog/data-modeling-techniques" target="_blank">4 data modeling techniques for modern data warehouses</a>
@@ -101,8 +185,8 @@ In this guide, we introduce a hybrid data modeling approach that combines the st
 * <a href="https://www.getdbt.com/analytics-engineering/modular-data-modeling-technique" target="_blank">Data modeling techniques for more modularity</a>
 * <a href="https://docs.getdbt.com/terms/dimensional-modeling" target="_blank">Dimensional modeling</a>
 * <a href="https://docs.getdbt.com/blog/kimball-dimensional-model" target="_blank">Building a Kimball dimensional model with dbt</a>
-
-
+* <a href="https://data-sleek.com/blog/modern-data-warehouse-modeling-with-dbt/" target="_blank">How To Use DBT To Bring Dimensions To Your Data</a>
+* 
 
 
 
