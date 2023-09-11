@@ -132,6 +132,12 @@ Run the following commands to properly check configuration:
 dbt debug --profiles-dir .
 ```
 ## Setting up OpenMetadata
+OpenMetadata provides a default admin account to login.
+You can access OpenMetadata at *http://localhost:8585*. Use the following credentials to log in to OpenMetadata.
+- Username: *admin*
+- Password: *admin*
+
+Once you log in, you can goto *Settings -> Users* to add another user and make them admin as well.
 
 ## Setting up Mage
 
@@ -166,6 +172,42 @@ adventureworks_dwh/
 - **analysis/**: This directory can contain SQL scripts for ad-hoc analysis and queries.
 
 # Start building models
+## Design Star schema
+
+![star_schema.png](images%2Fstar_schema.png)
+
+> **NOTE**: There are two main types of Dimensional Models that are often used today:
+> **Star Schema** and **Snowflake Schema**
+
+## Create models
+
+```bash
+# enter dbt project directory
+cd dbt/adventureworks_dwh
+
+# load seeds
+dbt seed --profiles-dir .
+# run all models
+dbt run --profiles-dir .
+```
+Get a better sense of what the records look like by executing select statements using your database's SQL editor.
+For example:
+```sql
+SELECT * FROM marts.obt_sales LIMIT 100
+```
+![select_obt.png](images%2Fselect_obt.png)
+
+## Show data linage
+```bash
+# generate document
+dbt docs generate --profiles-dir .
+# serve document web app
+dbt serve --port 8888
+# Serving docs at 8888
+# To access from your browser, navigate to: http://localhost:8888
+```
+
+![data_lineage.png](images%2Fdata_lineage.png)
 
 # Ensuring data quality
 ## Using dbt's default test capabilities
@@ -186,7 +228,7 @@ adventureworks_dwh/
 * <a href="https://docs.getdbt.com/terms/dimensional-modeling" target="_blank">Dimensional modeling</a>
 * <a href="https://docs.getdbt.com/blog/kimball-dimensional-model" target="_blank">Building a Kimball dimensional model with dbt</a>
 * <a href="https://data-sleek.com/blog/modern-data-warehouse-modeling-with-dbt/" target="_blank">How To Use DBT To Bring Dimensions To Your Data</a>
-* 
+* <a href="https://robinphetsavongdata.wordpress.com/2019/06/18/part-1-designing-and-building-the-data-warehous/" target="_blank">Designing and Building the Data Warehouse</a>
 
 
 
