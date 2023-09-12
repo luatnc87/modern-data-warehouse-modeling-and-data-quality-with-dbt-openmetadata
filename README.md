@@ -128,6 +128,8 @@ stackoverflow:
 ```
 Run the following commands to properly check configuration:
 ```bash
+# install dependencies
+dbt deps
 # We need to point out the directory of the profiles.yml file, because we are not using the default location.
 dbt debug --profiles-dir .
 ```
