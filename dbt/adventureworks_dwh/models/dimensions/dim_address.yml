@@ -2,6 +2,12 @@ version: 2
 
 models:
   - name: dim_address
+    description: "The address model"
+    meta:
+      owner: "@Luke"
+      fal:
+        scripts:
+          - scripts/fal/slack_bot.py
     columns:
       - name: address_key
         description: The surrogate key of the addressid

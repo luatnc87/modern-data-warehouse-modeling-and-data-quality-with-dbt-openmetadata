@@ -296,8 +296,55 @@ models:
 > NOTE: You can find more information about these tests in [this repo](https://github.com/calogica/dbt-expectations)
 
 ## Alerting with Slack
+In this guide, we will walk through a process of building a simple Slack bot that sends messages about dbt models. The bot will be written in Python and we will use fal to run the bot script inside a dbt project.
+### Setting up Slack channel and get essential credentials
+You can find detailed guide to set up Slack bot in [this document](https://blog.fal.ai/how-to-dbt-slack-integration/).
 
-# Making data it accessible,understandable and usable for users
+### Slack bot
+The first step, we need to install *fal* library to be able to use python script in dbt models.
+Add *dbt-fal==1.5.9* into the *requirements.txt* file, and run following command: 
+```bash
+pip install -r requiremnets.txt
+```
+
+You can find the *scripts/fal/slack_bot.py* file that will be executed via **dbt-fal run** command. 
+```python
+import os
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+CHANNEL_ID = os.getenv("SLACK_BOT_CHANNEL")
+SLACK_TOKEN = os.getenv("SLACK_BOT_TOKEN")
+
+client = WebClient(token=SLACK_TOKEN)
+message_text = f"Model: {context.current_model.name}. Status: {context.current_model.status}."
+
+try:
+    response = client.chat_postMessage(
+        channel=CHANNEL_ID,
+        text=message_text
+    )
+except SlackApiError as e:
+    # You will get a SlackApiError if "ok" is False
+    assert e.response["error"]
+```
+Declare the fal script in the schema file, example:
+```yaml
+version: 2
+
+models:
+  - name: dim_address
+    description: "The address model"
+    meta:
+      owner: "@Luke"
+      fal:
+        scripts:
+          - scripts/fal/slack_bot.py
+```
+After running *dbt-fal run --proflile-dir . --models dim_address*, you should be received the alert message on the Slack channel, example:
+![slack_alerts.png](images%2Fslack_alerts.png)
+
+# Making data it accessible, understandable and usable for users
 
 # Conclusion
 
@@ -311,6 +358,9 @@ models:
 * <a href="https://data-sleek.com/blog/modern-data-warehouse-modeling-with-dbt/" target="_blank">How To Use DBT To Bring Dimensions To Your Data</a>
 * <a href="https://robinphetsavongdata.wordpress.com/2019/06/18/part-1-designing-and-building-the-data-warehous/" target="_blank">Designing and Building the Data Warehouse</a>
 * <a href="https://github.com/calogica/dbt-expectations" target="_blank">Port(ish) of Great Expectations to dbt test macros</a>
+* <a href="https://blog.fal.ai/how-to-dbt-slack-integration/" target="_blank">How to integrate dbt with Slack</a>
+
+
 
 
 
