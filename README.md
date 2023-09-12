@@ -210,9 +210,88 @@ dbt serve --port 8888
 ![data_lineage.png](images%2Fdata_lineage.png)
 
 # Ensuring data quality
-## Using dbt's default test capabilities
+Tests are assertions you make about your models and other resources in your dbt project (e.g. sources, seeds and snapshots). When you run **dbt test**, dbt will tell you if each test in your project passes or fails.
 
-## Integrating with great-expectation
+## Using dbt's default test capabilities
+There are two ways of defining tests in dbt:
+- A **singular** test is testing in its simplest form: If you can write a SQL query that returns failing rows, you can save that query in a **.sql** file within your **test** directory. It's now a test, and it will be executed by the **dbt test** command.
+- A **generic** test is a parameterized query that accepts arguments. The test query is defined in a special test block (like a macro). Once defined, you can reference the generic test by name throughout your .yml files—define it on models, columns, sources, snapshots, and seeds. dbt ships with four generic tests built in.
+```yaml
+version: 2
+
+models:
+  - name: dim_address
+    columns:
+      - name: address_key
+        description: The surrogate key of the addressid
+        tests: # declare your generic test cases
+          - not_null # the address_key column in the dim_address model should not contain null value
+          - unique # the address_key column in the dim_address model should be unique
+      
+      - name: addressid
+        description: The natural key
+        tests:
+          - not_null
+          - unique
+
+      - name: city_name
+        description: The city name
+
+      - name: state_name
+        description: The state name
+
+      - name: country_name
+        description: The country name
+```
+> NOTE: You can find more information about these tests in [this document](https://docs.getdbt.com/reference/resource-properties/tests)
+### Run test cases
+Run following commands to trigger to generate and execute test cases
+```bash
+dbt test --profiles-dir . --models dim_address
+```
+You can find generated sql for each test case in the *target/run/..path-to-model../* directory.
+Example:
+```sql
+select
+    count(*) as failures,
+    count(*) != 0 as should_warn,
+    count(*) != 0 as should_error
+from (
+    select
+    address_key as unique_field,
+    count(*) as n_records
+    from "adventureworks_dwh"."marts"."dim_address"
+    where address_key is not null
+    group by address_key
+    having count(*) > 1
+) dbt_internal_test
+```
+## Integrating with great-expectations
+Integrating Great Expectations with dbt is a powerful way to expand your testing capabilities and enhance data quality assurance within your dbt projects. Great Expectations allows you to define, document, and validate expectations about your data, providing a comprehensive approach to data testing. 
+Here's a step-by-step guide to integrating Great Expectations with dbt:
+- Include in packages.yml
+```yaml
+packages:
+  - package: dbt-labs/dbt_utils
+    version: ["1.0.0"]
+  - package: calogica/dbt_expectations
+    version: [ ">=0.9.0", "<0.10.0" ]
+```
+Example, If you expect the specified column to exist, you can add test case with following content:
+```yaml
+version: 2
+
+models:
+  - name: dim_address
+    columns:
+      - name: addressid
+        description: The natural key
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_to_exist # this test is powered by great-expectation library
+```
+> NOTE: You can find more information about these tests in [this repo](https://github.com/calogica/dbt-expectations)
 
 ## Alerting with Slack
 
@@ -229,6 +308,7 @@ dbt serve --port 8888
 * <a href="https://docs.getdbt.com/blog/kimball-dimensional-model" target="_blank">Building a Kimball dimensional model with dbt</a>
 * <a href="https://data-sleek.com/blog/modern-data-warehouse-modeling-with-dbt/" target="_blank">How To Use DBT To Bring Dimensions To Your Data</a>
 * <a href="https://robinphetsavongdata.wordpress.com/2019/06/18/part-1-designing-and-building-the-data-warehous/" target="_blank">Designing and Building the Data Warehouse</a>
+* <a href="https://github.com/calogica/dbt-expectations" target="_blank">Port(ish) of Great Expectations to dbt test macros</a>
 
 
 
