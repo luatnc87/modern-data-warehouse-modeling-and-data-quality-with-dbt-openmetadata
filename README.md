@@ -140,14 +140,15 @@ You can access OpenMetadata at *http://localhost:8585*. Use the following creden
 - Password: *admin*
 
 Once you log in, you can goto *Settings -> Users* to add another user and make them admin as well.
+![openmetadata_login.png](images%2Fopenmetadata_login.png)
 
 ## Setting up Mage
 
-## Setting up Slack bot for alerts
+## Setting up Slack bot and get essential credentials for alerting
+You can find detailed guide to set up Slack bot in [this document](https://blog.fal.ai/how-to-dbt-slack-integration/).
 
-
-# How to structure dbt project
-Start by creating a well-organized directory structure for your dbt project. The root directory might look something like this:
+# Creating the structure of the dbt project
+Starting by creating a well-organized directory structure for your dbt project. The root directory might look something like this:
 
 ```bash
 adventureworks_dwh/
@@ -297,8 +298,6 @@ models:
 
 ## Alerting with Slack
 In this guide, we will walk through a process of building a simple Slack bot that sends messages about dbt models. The bot will be written in Python and we will use fal to run the bot script inside a dbt project.
-### Setting up Slack channel and get essential credentials
-You can find detailed guide to set up Slack bot in [this document](https://blog.fal.ai/how-to-dbt-slack-integration/).
 
 ### Slack bot
 The first step, we need to install *fal* library to be able to use python script in dbt models.
@@ -345,6 +344,7 @@ After running *dbt-fal run --proflile-dir . --models dim_address*, you should be
 ![slack_alerts.png](images%2Fslack_alerts.png)
 
 # Making data it accessible, understandable and usable for users
+Next step, we'll integrate the dbt with the Openmetadata. 
 
 # Conclusion
 
@@ -359,7 +359,7 @@ After running *dbt-fal run --proflile-dir . --models dim_address*, you should be
 * <a href="https://robinphetsavongdata.wordpress.com/2019/06/18/part-1-designing-and-building-the-data-warehous/" target="_blank">Designing and Building the Data Warehouse</a>
 * <a href="https://github.com/calogica/dbt-expectations" target="_blank">Port(ish) of Great Expectations to dbt test macros</a>
 * <a href="https://blog.fal.ai/how-to-dbt-slack-integration/" target="_blank">How to integrate dbt with Slack</a>
-
+* <a href="https://docs.open-metadata.org/v1.1.0/connectors/ingestion/workflows/dbt/ingest-dbt-cli" target="_blank">OpenMetadata - Ingest dbt cli</a>
 
 
 
