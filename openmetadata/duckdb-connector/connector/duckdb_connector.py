@@ -43,6 +43,7 @@ from metadata.generated.schema.type.entityReference import EntityReference
 from metadata.generated.schema.api.data.createTable import CreateTableRequest
 from metadata.ingestion.ometa.ometa_api import OpenMetadata
 from metadata.utils.logger import ingestion_logger
+import re
 
 logger = ingestion_logger()
 
@@ -54,16 +55,9 @@ class InvalidDuckDBConnectorException(Exception):
 
 
 class DuckDBModel(BaseModel):
-    name: str
-    column_names: List[str]
-    column_types: List[str]
-
-    @validator("column_names", "column_types", pre=True)
-    def str_to_list(cls, value):
-        """
-        Suppose that the internal split is in ;
-        """
-        return value.split(";")
+    table_name: Optional[str]
+    column_names: Optional[List[str]]
+    column_types: Optional[List[str]]
 
 
 class DuckDBConnector(Source):
@@ -86,9 +80,17 @@ class DuckDBConnector(Source):
         self.database_name: str = (
             self.service_connection.connectionOptions.__root__.get("database_name")
         )
-        if not self.database_file_path:
+        if not self.database_name:
             raise InvalidDuckDBConnectorException(
                 "Missing database_name connection option"
+            )
+
+        self.database_schema_name: str = (
+            self.service_connection.connectionOptions.__root__.get("database_schema_name")
+        )
+        if not self.database_schema_name:
+            raise InvalidDuckDBConnectorException(
+                "Missing database_schema_name connection option"
             )
 
         self.database_file_path: str = (
@@ -99,15 +101,7 @@ class DuckDBConnector(Source):
                 "Missing database_file_path connection option"
             )
 
-        self.business_unit: str = (
-            self.service_connection.connectionOptions.__root__.get("business_unit")
-        )
-        if not self.business_unit:
-            raise InvalidDuckDBConnectorException(
-                "Missing business_unit connection option"
-            )
-
-        self.data: Optional[List[DuckDBModel]] = None
+        self.data: Optional[List[DuckDBModel]] = []
 
     @classmethod
     def create(
@@ -121,52 +115,70 @@ class DuckDBConnector(Source):
             )
         return cls(config, metadata_config)
 
-    @staticmethod
-    def read_row_safe(row: Dict[str, Any]):
-        try:
-            return DuckDBModel.parse_obj(row)
-        except ValidationError:
-            logger.warning(f"Error parsing row {row}. Skipping it.")
-
     def prepare(self):
         # Validate that the db file exists
         source_database_file_path = Path(self.database_file_path)
         if not source_database_file_path.exists():
             raise InvalidDuckDBConnectorException("Source Database file path does not exist")
 
+        # to use a database file (shared between processes)
+        conn = duckdb.connect(database=self.database_file_path, read_only=True)
         try:
+            sql_get_schemas = f"";
+            sql_get_tables = f"SELECT DISTINCT table_name FROM duckdb_tables() WHERE database_name = '{self.database_name}' and schema_name like '{self.database_schema_name}'"
+            table_list = conn.sql(sql_get_tables).fetchall()
+            for table in table_list:
+                sql_get_columns = f"SELECT DISTINCT column_name, data_type FROM duckdb_columns() WHERE schema_name = '{self.database_schema_name}' and table_name = '{table[0]}'"
+                column_list = conn.sql(sql_get_columns).fetchall()
 
-            with open(source_data, "r", encoding="utf-8") as file:
-                reader = csv.DictReader(file)
-                self.data = [self.read_row_safe(row) for row in reader]
+                table_model = DuckDBModel(table_name = table[0]
+                                          , column_names = [column[0] for column in column_list]
+                                          , column_types = [self.convert_data_type(column[1]) for column in column_list]
+                                          )
+                self.data.append(table_model)
+
+            conn.close()
         except Exception as exc:
             logger.error("Unknown error reading the source file")
+            conn.close()
             raise exc
+
+    def convert_data_type(self, input_data_type):
+        output_data_type = input_data_type
+
+        if input_data_type == "INTEGER":
+            output_data_type = "INT"
+        elif input_data_type.startswith("DECIMAL"):
+            output_data_type = "DECIMAL"
+        elif input_data_type.startswith("TIMESTAMP"):
+            output_data_type = "TIMESTAMP"
+
+        return output_data_type
 
     def yield_create_request_database_service(self):
         yield self.metadata.get_create_service_from_source(
             entity=DatabaseService, config=self.config
         )
 
-    def yield_business_unit_db(self):
+    def yield_create_request_database(self):
         # Pick up the service we just created (if not UI)
         service_entity: DatabaseService = self.metadata.get_by_name(
             entity=DatabaseService, fqn=self.config.serviceName
         )
 
         yield CreateDatabaseRequest(
-            name=self.business_unit,
+            name=self.database_name,
             service=service_entity.fullyQualifiedName,
         )
 
-    def yield_default_schema(self):
+    def yield_create_request_schema(self):
         # Pick up the service we just created (if not UI)
         database_entity: Database = self.metadata.get_by_name(
-            entity=Database, fqn=f"{self.config.serviceName}.{self.business_unit}"
+            entity=Database, fqn=f"{self.config.serviceName}.{self.database_name}"
         )
 
         yield CreateDatabaseSchemaRequest(
-            name="default",
+            name=self.database_schema_name,
             database=database_entity.fullyQualifiedName,
         )
 
@@ -176,17 +188,20 @@ class DuckDBConnector(Source):
         """
         database_schema: DatabaseSchema = self.metadata.get_by_name(
             entity=DatabaseSchema,
-            fqn=f"{self.config.serviceName}.{self.business_unit}.default",
+            fqn=f"{self.config.serviceName}.{self.database_name}.{self.database_schema_name}",
         )
 
         for row in self.data:
             yield CreateTableRequest(
-                name=row.name,
+                name=row.table_name,
                 databaseSchema=database_schema.fullyQualifiedName,
                 columns=[
                     Column(
                         name=model_col[0],
                         dataType=model_col[1],
+                        dataLength=-1
+                        # character_maximum_length: Always NULL.
+                        # DuckDB text types do not enforce a value length restriction based on a length type parameter.
                     )
                     for model_col in zip(row.column_names, row.column_types)
                 ],
@@ -194,8 +209,8 @@ class DuckDBConnector(Source):
 
     def next_record(self) -> Iterable[Entity]:
         yield from self.yield_create_request_database_service()
-        yield from self.yield_business_unit_db()
-        yield from self.yield_default_schema()
+        yield from self.yield_create_request_database()
+        yield from self.yield_create_request_schema()
         yield from self.yield_data()
 
     def get_status(self) -> SourceStatus:
