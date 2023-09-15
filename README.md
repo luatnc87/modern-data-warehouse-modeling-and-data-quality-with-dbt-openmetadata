@@ -360,6 +360,9 @@ Next step, we'll integrate the dbt with the Openmetadata.
 * <a href="https://github.com/calogica/dbt-expectations" target="_blank">Port(ish) of Great Expectations to dbt test macros</a>
 * <a href="https://blog.fal.ai/how-to-dbt-slack-integration/" target="_blank">How to integrate dbt with Slack</a>
 * <a href="https://docs.open-metadata.org/v1.1.0/connectors/ingestion/workflows/dbt/ingest-dbt-cli" target="_blank">OpenMetadata - Ingest dbt cli</a>
+* <a href="https://github.com/open-metadata/openmetadata-demo/blob/main/custom-connector/README.md" target="_blank">Creating a Custom Connector</a>
+* <a href="https://docs.open-metadata.org/v1.1.x/sdk/python/build-connector/source" target="_blank">Build OpenMetadata Source</a>
+  
 
 
 
