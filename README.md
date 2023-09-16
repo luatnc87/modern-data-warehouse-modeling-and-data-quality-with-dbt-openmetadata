@@ -4,6 +4,20 @@ This repository serves as a comprehensive guide to effective data modeling and r
 
 ![architecture.png](images%2Farchitecture.png)
 
+---
+# The contents
+- [Understanding the Tools](#understanding-the-tools)
+- [Understanding the Modeling techniques](#understanding-the-modeling-techniques)
+- [Hybrid Data Modeling Approach: Dimensional Model + One Big Table](#hybrid-data-modeling-approach-dimensional-model--one-big-table)
+- [Setting up DuckDB, dbt, OpenMetadata, and Mate with Docker Compose](#setting-up-duckdb-dbt-openmetadata-and-mate-with-docker-compose)
+- [Creating the structure of the dbt project](#creating-the-structure-of-the-dbt-project)
+- [Start building models](#start-building-models)
+- [Ensuring data quality](#ensuring-data-quality)
+- [Making data it accessible, understandable and usable for users](#making-data-it-accessible-understandable-and-usable-for-users)
+- []()
+- []()
+- []()
+
 # Understanding the Tools
 In this session, we'll familiarize ourselves with the key tools that power our data modeling and data quality journey: dbt and OpenMetadata. 
 ## dbt
@@ -169,7 +183,7 @@ adventureworks_dwh/
 │
 └── analysis/
 ```
-- **models/**: This directory is where you will define your dbt models. Create subdirectories to separate different types of models, including **dimensions/** for dimension tables and **facts/** for fact tables.
+- **models/**: This directory is where you will define your dbt models. Create subdirectories to separate different types of models, including `dimensions/` for dimension tables and `facts/` for fact tables.
 - **data/**: This directory can contain raw and processed data. Raw data might be stored in the raw/ directory, while processed data used by dbt can reside in the processed/ directory.
 - **macros/**: Store custom macros and SQL functions that you use across your dbt models.
 - **analysis/**: This directory can contain SQL scripts for ad-hoc analysis and queries.
@@ -200,7 +214,7 @@ SELECT * FROM marts.obt_sales LIMIT 100
 ```
 ![select_obt.png](images%2Fselect_obt.png)
 
-## Show data linage
+## Showing data linage
 ```bash
 # generate document
 dbt docs generate --profiles-dir .
@@ -209,6 +223,7 @@ dbt serve --port 8888
 # Serving docs at 8888
 # To access from your browser, navigate to: http://localhost:8888
 ```
+Navigating to *http://localhost:8888* to view data lineage
 
 ![data_lineage.png](images%2Fdata_lineage.png)
 
@@ -344,7 +359,121 @@ After running *dbt-fal run --proflile-dir . --models dim_address*, you should be
 ![slack_alerts.png](images%2Fslack_alerts.png)
 
 # Making data it accessible, understandable and usable for users
-Next step, we'll integrate the dbt with the Openmetadata. 
+Next step, we'll integrate the dbt with the OpenMetadata. 
+## Building a Custom DuckDB Connector for OpenMetadata
+You can find more information in [this repository](https://github.com/luatnc87/openmetadata-duckdb-connector).
+
+## Using the DuckDB Connector
+### Create a Database service, Database, DatabaseSchema and Table entities 
+The first step, we need to install `openmetadata-ingestion` library used to ingest metadata to OpenMeatadata server. You can run following command or use `requirments.txt` to install the library.
+```bash
+pip install openmetadata-ingestion==1.1.2
+```
+Next step, we'll install the DuckDB Connector:
+```bash
+# Install the duckdb library
+pip install duckdb==0.8.1
+
+# Install the DuckDB connector
+cd openmetadata/duckdb-connector
+pip install --no-deps .
+```
+Then we can run following command to ingest metadata from local DuckDB database into the OpenMetadata server.
+```bash
+cd openmetadata
+metadata ingest -c duckdb_ingetion.yml
+```
+The content of the `duckdb_ingestion.yml` ingestion configuration file:
+```yaml
+source:
+  type: customDatabase
+  serviceName: duckdb_local
+  serviceConnection:
+    config:
+      type: CustomDatabase
+      sourcePythonClass: connector.duckdb_connector.DuckDBConnector
+      connectionOptions:
+        database_name: adventureworks_dwh
+        database_schema_list: date,person,production,sales,dimensions,facts,marts
+        database_file_path: /data/duckdb/adventureworks_dwh.duckdb
+  sourceConfig:
+    config:
+      type: DatabaseMetadata
+sink:
+  type: metadata-rest
+  config: {}
+workflowConfig:
+  openMetadataServerConfig:
+    hostPort: http://localhost:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: 'eyJ...fg6Q'
+      # You can get this token via OpenMetadata UI, go to Settings -> Integrations -> Bots -> ingestion-bot -> OpenMetadata JWT Token
+```
+
+### Ingest dbt metadata into the OpenMetadata server from dbt assets
+Next step, we'll ingest dbt metadata from local. We need to run following commands to create input files.
+```bash
+cd dbt/adventureworks_dwh
+
+# generate manifest.json and run_results.json files in the `target` directory
+dbt run --profiles-dir .
+dbt test --profiles-dir .
+# generate catalog.json
+dbt docs genrate --profiles-dir .
+
+# ingest the metadata in the `target` directory
+metadata ingest -c dbt_ingestion.yml
+```
+The content of the `dbtb_ingestion.yml` ingestion configuration file:
+```yaml
+source:
+  type: dbt
+  serviceName: duckdb_local
+  sourceConfig:
+    config:
+      type: DBT
+      dbtConfigSource:
+        dbtCatalogFilePath: /path/to/catalog.json
+        dbtManifestFilePath: /path/to/manifest.json
+        dbtRunResultsFilePath: /path/to/run_results.json
+      databaseFilterPattern:
+        includes:
+          - .*adventureworks_dwh.*
+      schemaFilterPattern:
+        includes:
+          - .*marts.*
+      tableFilterPattern:
+        includes:
+          - .*obt_sales.*
+sink:
+  type: metadata-rest
+  config: {}
+workflowConfig:
+  openMetadataServerConfig:
+    hostPort: http://localhost:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: 'eyJ...fg6Q'
+```
+You can check the results on OpenMetadata UI.
+
+| ![openmetadata_duckdb_service.png](images%2Fopenmetadata_duckdb_service.png) |
+|:----------------------------------------------------------------------------:|
+|                             *Database metadata*                              |
+
+
+| ![openmetadata_duckdb_marts_obt_sales.png](images%2Fopenmetadata_duckdb_marts_obt_sales.png) |
+|:--------------------------------------------------------------------------------------------:|
+|                                      *Models metadata*                                       |
+
+| ![openmetadata_duckdb_marts_obt_sales_dbt_tab.png](images%2Fopenmetadata_duckdb_marts_obt_sales_dbt_tab.png) |
+|:------------------------------------------------------------------------------------------------------------:|
+|                                                *dbt SQL code*                                                |
+
+# Automate jobs with Mage
+
+
 
 # Conclusion
 
@@ -362,7 +491,8 @@ Next step, we'll integrate the dbt with the Openmetadata.
 * <a href="https://docs.open-metadata.org/v1.1.0/connectors/ingestion/workflows/dbt/ingest-dbt-cli" target="_blank">OpenMetadata - Ingest dbt cli</a>
 * <a href="https://github.com/open-metadata/openmetadata-demo/blob/main/custom-connector/README.md" target="_blank">Creating a Custom Connector</a>
 * <a href="https://docs.open-metadata.org/v1.1.x/sdk/python/build-connector/source" target="_blank">Build OpenMetadata Source</a>
-  
+* <a href="https://atlan.com/openmetadata-dbt/?ref=/openmetadata-ingestion/" target="_blank">OpenMetadata and dbt: For an Integrated View of Data Assets</a>
+
 
 
 
