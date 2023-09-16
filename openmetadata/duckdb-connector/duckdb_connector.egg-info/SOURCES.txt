@@ -1,8 +1,0 @@
-setup.py
-connector/__init__.py
-connector/duckdb_connector.py
-duckdb_connector.egg-info/PKG-INFO
-duckdb_connector.egg-info/SOURCES.txt
-duckdb_connector.egg-info/dependency_links.txt
-duckdb_connector.egg-info/requires.txt
-duckdb_connector.egg-info/top_level.txt

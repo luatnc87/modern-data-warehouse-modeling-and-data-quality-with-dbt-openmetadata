@@ -1,9 +1,0 @@
-Metadata-Version: 2.1
-Name: duckdb-connector
-Version: 0.0.1
-Summary: Ingestion Framework for OpenMetadata
-Home-page: https://open-metadata.org/
-Author: Luke Nguyen
-License: Apache License 2.0
-Requires-Python: >=3.7
-Description-Content-Type: text/markdown
