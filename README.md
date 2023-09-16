@@ -14,9 +14,8 @@ This repository serves as a comprehensive guide to effective data modeling and r
 - [Start building models](#start-building-models)
 - [Ensuring data quality](#ensuring-data-quality)
 - [Making data it accessible, understandable and usable for users](#making-data-it-accessible-understandable-and-usable-for-users)
-- []()
-- []()
-- []()
+- [Automate jobs with Apache Airflow](#automate-jobs-with-apache-airflow)
+- [Conclusion](#conclusion)
 
 # Understanding the Tools
 In this session, we'll familiarize ourselves with the key tools that power our data modeling and data quality journey: dbt and OpenMetadata. 
@@ -113,7 +112,7 @@ In this guide, we introduce a hybrid data modeling approach that combines the st
   - Suitable for scenarios where query simplicity and speed are priorities.
 - **Use Case**: The One Big Table approach is implemented in the Mart layer, which acts as a user-friendly data mart. It allows business users to access data quickly, create reports, and gain insights without the need for extensive SQL knowledge.
 
-# Setting up DuckDB, dbt, OpenMetadata, and Mate with Docker Compose
+# Setting up DuckDB, dbt, OpenMetadata, and Mage with Docker Compose
 ## Setting up DuckDB
 DuckDB will be installed as a library with dbt in the next session.
 
@@ -156,7 +155,17 @@ You can access OpenMetadata at *http://localhost:8585*. Use the following creden
 Once you log in, you can goto *Settings -> Users* to add another user and make them admin as well.
 ![openmetadata_login.png](images%2Fopenmetadata_login.png)
 
-## Setting up Mage
+## Setting up Airflow
+OpenMetadata ships with an Airflow container to run the ingestion workflows that have been deployed via the UI.
+
+In the Airflow, you will also see some sample DAGs that will ingest sample data and serve as an example.
+
+You can access Airflow at http://localhost:8080. Use the following credentials to log in to Airflow.
+
+- Username: `admin`
+- Password: `admin`
+
+![openmetadata_airflow.png](images%2Fopenmetadata_airflow.png)
 
 ## Setting up Slack bot and get essential credentials for alerting
 You can find detailed guide to set up Slack bot in [this document](https://blog.fal.ai/how-to-dbt-slack-integration/).
@@ -188,15 +197,15 @@ adventureworks_dwh/
 - **macros/**: Store custom macros and SQL functions that you use across your dbt models.
 - **analysis/**: This directory can contain SQL scripts for ad-hoc analysis and queries.
 
-# Start building models
-## Design Star schema
+# Starting to build dbt models
+## Designing the Star schema
 
 ![star_schema.png](images%2Fstar_schema.png)
 
 > **NOTE**: There are two main types of Dimensional Models that are often used today:
 > **Star Schema** and **Snowflake Schema**
 
-## Create models
+## Creating the dbt models
 
 ```bash
 # enter dbt project directory
@@ -471,7 +480,7 @@ You can check the results on OpenMetadata UI.
 |:------------------------------------------------------------------------------------------------------------:|
 |                                                *dbt SQL code*                                                |
 
-# Automate jobs with Mage
+# Automate jobs with Apache Airflow
 
 
 
@@ -492,6 +501,8 @@ You can check the results on OpenMetadata UI.
 * <a href="https://github.com/open-metadata/openmetadata-demo/blob/main/custom-connector/README.md" target="_blank">Creating a Custom Connector</a>
 * <a href="https://docs.open-metadata.org/v1.1.x/sdk/python/build-connector/source" target="_blank">Build OpenMetadata Source</a>
 * <a href="https://atlan.com/openmetadata-dbt/?ref=/openmetadata-ingestion/" target="_blank">OpenMetadata and dbt: For an Integrated View of Data Assets</a>
+* <a href="https://www.astronomer.io/blog/airflow-and-dbt/#airflow-and-dbt-core" target="_blank">Airflow and dbt, Hand in Hand</a>
+* <a href="https://www.datafold.com/blog/running-dbt-with-airflow" target="_blank">Running dbt with Airflow</a>
 
 
 

@@ -1,0 +1,23 @@
+source:
+  type: customDatabase
+  serviceName: duckdb_local
+  serviceConnection:
+    config:
+      type: CustomDatabase
+      sourcePythonClass: connector.duckdb_connector.DuckDBConnector
+      connectionOptions:
+        database_name: adventureworks_dwh
+        database_schema_list: date,person,production,sales,dimensions,facts,marts
+        database_file_path: /data/duckdb/adventureworks_dwh.duckdb
+  sourceConfig:
+    config:
+      type: DatabaseMetadata
+sink:
+  type: metadata-rest
+  config: {}
+workflowConfig:
+  openMetadataServerConfig:
+    hostPort: http://localhost:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: 'eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6ImluZ2VzdGlvbi1ib3QiLCJlbWFpbCI6ImluZ2VzdGlvbi1ib3RAb3Blbm1ldGFkYXRhLm9yZyIsImlzQm90Ijp0cnVlLCJ0b2tlblR5cGUiOiJCT1QiLCJpYXQiOjE2OTQ0MzI2NzgsImV4cCI6bnVsbH0.CxWYoaiGcwc8BCW2b5l8lG0oTsK7jkygU6pBdq_4MHf3YvSz2aouNDljxD92Hw0XsBF3Q8_de5KOqKdkLjOnCTmO6-PLz_GdpPbhdJV51b0Xbp8rjBfOCosUWrMOdnuk04ZKA6pHf7C0u0rDFy5-tn0SUSlXNxXxisLw5qfyejuDwY1DP_PkhEfBrxOU5Ni2vYf3KI9ywOJseXgPmrAlL1zV3bbQePzkIlpjz8VyjWnr94H329svpvlO5eMOenIQoRk0NCBpCoBucI--byATGWI9fZHo62HNLlU8fHyZ1diFWRzrkXuGFIOFAeIZi9I6fOD_9-XYxjiE5bM_aUfg6Q'

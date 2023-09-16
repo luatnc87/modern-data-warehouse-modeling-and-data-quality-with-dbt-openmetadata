@@ -36,3 +36,10 @@ models:
     marts:
       +materialized: table
       +schema: marts
+    dimensions:
+      +materialized: table
+      +schema: dimensions
+    facts:
+      +materialized: table
+      +schema: facts
+

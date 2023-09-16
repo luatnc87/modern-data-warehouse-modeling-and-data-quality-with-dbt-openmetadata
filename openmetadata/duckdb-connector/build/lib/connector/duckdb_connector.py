@@ -126,6 +126,8 @@ class DuckDBConnector(Source):
         # to use a database file (shared between processes)
         conn = duckdb.connect(database=self.database_file_path, read_only=True)
         try:
+            #sql_get_schemas = f"SELECT DISTINCT schema_name FROM duckdb_schemas() WHERE schema_name like '{self.database_schema_name}'"
+            #schema_list = conn.sql(sql_get_schemas).fetchall()
             for schema in self.database_schema_list:
                 self.crawl_schema_table_metadata(conn= conn, database_name=self.database_name, database_schema_name=schema)
 
@@ -137,9 +139,9 @@ class DuckDBConnector(Source):
 
     def crawl_schema_table_metadata(self, conn, database_name, database_schema_name):
         logger.debug(f"Start crawling the schemas: {database_name}.{database_schema_name}")
-
-        sql_get_tables = f"SELECT DISTINCT table_name FROM duckdb_tables() WHERE database_name = '{database_name}' and schema_name = '{database_schema_name}'"
+        sql_get_tables = f"SELECT DISTINCT table_name FROM duckdb_tables() WHERE database_name = '{database_name}' and schema_name like '{database_schema_name}'"
         table_list = conn.sql(sql_get_tables).fetchall()
+
         table_models = []
         for table in table_list:
             sql_get_columns = f"SELECT DISTINCT column_name, data_type FROM duckdb_columns() WHERE schema_name = '{database_schema_name}' and table_name = '{table[0]}'"

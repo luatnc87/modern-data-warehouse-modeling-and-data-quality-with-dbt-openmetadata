@@ -1,0 +1,28 @@
+source:
+  type: dbt
+  serviceName: duckdb_local
+  sourceConfig:
+    config:
+      type: DBT
+      dbtConfigSource:
+        dbtCatalogFilePath: /mnt/d/Projects/MyProfile/modern-data-warehouse-modeling-and-data-quality-with-dbt-openmetada/dbt/adventureworks_dwh/target/catalog.json
+        dbtManifestFilePath: /mnt/d/Projects/MyProfile/modern-data-warehouse-modeling-and-data-quality-with-dbt-openmetada/dbt/adventureworks_dwh/target/manifest.json
+        dbtRunResultsFilePath: /mnt/d/Projects/MyProfile/modern-data-warehouse-modeling-and-data-quality-with-dbt-openmetada/dbt/adventureworks_dwh/target/run_results.json
+      databaseFilterPattern:
+        includes:
+          - .*adventureworks_dwh.*
+      schemaFilterPattern:
+        includes:
+          - .*
+      tableFilterPattern:
+        includes:
+          - .*
+sink:
+  type: metadata-rest
+  config: {}
+workflowConfig:
+  openMetadataServerConfig:
+    hostPort: http://localhost:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: 'eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6ImluZ2VzdGlvbi1ib3QiLCJlbWFpbCI6ImluZ2VzdGlvbi1ib3RAb3Blbm1ldGFkYXRhLm9yZyIsImlzQm90Ijp0cnVlLCJ0b2tlblR5cGUiOiJCT1QiLCJpYXQiOjE2OTQ0MzI2NzgsImV4cCI6bnVsbH0.CxWYoaiGcwc8BCW2b5l8lG0oTsK7jkygU6pBdq_4MHf3YvSz2aouNDljxD92Hw0XsBF3Q8_de5KOqKdkLjOnCTmO6-PLz_GdpPbhdJV51b0Xbp8rjBfOCosUWrMOdnuk04ZKA6pHf7C0u0rDFy5-tn0SUSlXNxXxisLw5qfyejuDwY1DP_PkhEfBrxOU5Ni2vYf3KI9ywOJseXgPmrAlL1zV3bbQePzkIlpjz8VyjWnr94H329svpvlO5eMOenIQoRk0NCBpCoBucI--byATGWI9fZHo62HNLlU8fHyZ1diFWRzrkXuGFIOFAeIZi9I6fOD_9-XYxjiE5bM_aUfg6Q'
