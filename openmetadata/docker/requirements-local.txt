@@ -1,0 +1,4 @@
+dbt-core==1.5.5
+dbt-duckdb==1.5.2
+dbt-fal==1.5.9
+slack_sdk==3.22.0
