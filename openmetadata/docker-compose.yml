@@ -390,8 +390,7 @@ services:
       DB_USER: ${AIRFLOW_DB_USER:-airflow_user}
       DB_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow_pass}
     entrypoint: /bin/bash
-    command:
-      - "/opt/airflow/ingestion_dependency.sh"
+    command: ["-c", "/opt/airflow/ingestion_dependency.sh && /opt/airflow/docker/docker-bootstrap.sh"]
     expose:
       - 8080
     ports:
@@ -399,9 +398,11 @@ services:
     networks:
       - app_net
     volumes:
-      - /data/openmetadata/ingestion-volume-dag-airflow:/opt/airflow/dag_generated_configs
-      - /data/openmetadata/ingestion-volume-dags:/opt/airflow/dags
+      - ../airflow/configs:/opt/airflow/dag_generated_configs
+      - ../airflow/dags:/opt/airflow/dags
       - /data/openmetadata/ingestion-volume-tmp:/tmp
+      - /data/duckdb:/data/duckdb # share DuckDB database
+      - ./docker:/opt/airflow/docker
 
 
 networks:
