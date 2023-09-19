@@ -16,11 +16,13 @@ with DAG(
         dag_id="dbt_adventureworks_dwh-v1", # The name that shows up in the UI
         start_date=pendulum.today(), # Start date of the DAG
         catchup=False,
+        max_active_runs=1,
 ) as dag:
 
     # Create a dict of Operators
     dbt_tasks = dict()
     for node_id, node_info in nodes.items():
+        dbt_cmd = "seed" if node_info["resource_type"] == "seed" else "run"
         dbt_tasks[node_id] = BashOperator(
             task_id=".".join(
                 [
@@ -29,14 +31,8 @@ with DAG(
                     node_info["name"],
                 ]
             ),
-            # bash_command=f"cd {dbt_path}" # Go to the path containing your dbt project
-            #              + ' && eval "\$(python init -)"' # Load Pyenv
-            #              + ' && eval "\$(pyenv virtualenv-init -)"' # Load Pyenv Virtualenv
-            #              + " && pyenv activate demo_dbt" # Activate the dbt virtual environment
-            #              + f" && dbt run --models {node_info['name']}", # run the model!
             bash_command=f"cd {dbt_path}" # Go to the path containing your dbt project
-                         + " && source /tmp/adventureworks_dwh/venv/bin/activate" # Activate the dbt virtual environment
-                         + f" && dbt run --profiles-dir . --models {node_info['name']}", # run the model!
+                         + f" && dbt {dbt_cmd} --profiles-dir . --models {node_info['name']}", # run the model!
         )
 
     # Define relationships between Operators
