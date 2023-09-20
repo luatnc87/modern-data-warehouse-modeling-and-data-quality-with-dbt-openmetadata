@@ -1,10 +1,9 @@
 # Modern data warehouse modeling and ensuring data quality with dbt and OpenMetadata
 
-This repository serves as a comprehensive guide to effective data modeling and robust data quality assurance using popular open-source tools such as dbt and OpenMetadata. Dive into practical examples and best practices to elevate your data analytics projects.
+This repository serves as a comprehensive guide to effective data modeling and robust data quality ensurance using popular open-source tools such as dbt, Great-Expectation and OpenMetadata. Dive into practical examples and best practices to elevate your data analytics projects.
 
 ![architecture.png](images%2Farchitecture.png)
 
----
 # The contents
 - [Understanding the Tools](#understanding-the-tools)
 - [Understanding the Modeling techniques](#understanding-the-modeling-techniques)
