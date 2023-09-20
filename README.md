@@ -480,11 +480,91 @@ You can check the results on OpenMetadata UI.
 |:------------------------------------------------------------------------------------------------------------:|
 |                                                *dbt SQL code*                                                |
 
-# Automate jobs with Apache Airflow
+# Automating dbt tasks with Apache Airflow
+## Building the dbt DAG
+When you ran dbt docs generate, dbt created manifest.json, among other things. This file is very useful, as it has the name of every model, every test, and the dependency relationships between them! Let’s build a DAG that leverages this file to automate generating all the tasks.
+```python
+import os
+import json
+import pendulum
+from airflow import DAG
+from airflow.operators.bash import BashOperator
 
+dbt_path = os.path.join("/opt/airflow/dags", "adventureworks_dwh") # path to your dbt project
+manifest_path = os.path.join(dbt_path, "target/manifest.json") # path to manifest.json
 
+with open(manifest_path) as f: # Open manifest.json
+    manifest = json.load(f) # Load its contents into a Python Dictionary
+    nodes = manifest["nodes"] # Extract just the nodes
+
+# Build an Airflow DAG
+with DAG(
+        dag_id="dbt_adventureworks_dwh-v1", # The name that shows up in the UI
+        start_date=pendulum.today(), # Start date of the DAG
+        catchup=False,
+        max_active_runs=1,
+) as dag:
+
+    # Create a dict of Operators
+    dbt_tasks = dict()
+    for node_id, node_info in nodes.items():
+      dbt_cmd = "run" if node_info["resource_type"] == "model" else node_info["resource_type"]
+        dbt_tasks[node_id] = BashOperator(
+            task_id=".".join(
+                [
+                    node_info["resource_type"],
+                    node_info["package_name"],
+                    node_info["name"],
+                ]
+            ),
+            bash_command=f"cd {dbt_path}" # Go to the path containing your dbt project
+                         + f" && dbt {dbt_cmd} --profiles-dir . --models {node_info['name']}", # run the model!
+        )
+
+    # Define relationships between Operators
+    for node_id, node_info in nodes.items():
+        upstream_nodes = node_info["depends_on"].get("nodes")
+        if upstream_nodes:
+            for upstream_node in upstream_nodes:
+                dbt_tasks[upstream_node] >> dbt_tasks[node_id]
+
+if __name__ == "__main__":
+    dag.cli()
+```
+This program:
+- Loads the `manifest.json` file from dbt into a Python Dictionary.
+- Creates an Airflow DAG named `dbt_adventureworks_dwh-v1`.
+- Creates a task for each `node` (where node is either a model/test or a seed).
+- Defines the dependency relationship between nodes.
+
+Save the file and wait about 30 seconds. Airflow will find the DAG and load it. When it’s ready, you should see it at the top of your DAG list.
+> NOTE: Airflow will find and load the DAG located in this `../airflow/dags:/opt/airflow/dags` volume
+
+Go to Airflow UI, then click on your DAG and select the graph view. Your DAG should look like this!
+
+![airflow_dag.png](images%2Fairflow_dag.png)
+
+Now, turn on your DAG, enable Auto-refresh, and trigger a run. All your tasks should complete successfully and turn green!
+
+![run_dbt_airflow.png](images%2Frun_dbt_airflow.png)
 
 # Conclusion
+In this guide, we embarked on a journey to build a robust and efficient data analytics platform powered by DuckDB, dbt, OpenMetadata and Apache Airflow. Throughout this exploration, we have uncovered several essential insights and best practices that can help organizations streamline their data management and analytics workflows. Let's recap some of the key takeaways:
+- **Choice of Tools**: We began by carefully selecting our tools. DuckDB served as the high-performance analytical database, dbt empowered us with data transformation capabilities and testing, and Apache Airflow facilitated job scheduling and automation.
+- **Dimensional Modeling**: We discussed the importance of adopting dimensional modeling techniques, such as the Star Schema, to structure data for efficient analytics. This approach allows for optimized querying and reporting, catering to both power users and business stakeholders.
+- **Data Testing**: We introduced data testing through dbt, explaining how to declare test cases to validate data quality and compliance with expectations. Integration with Great Expectations further enhances data testing capabilities.
+- **Documentation and Collaboration**: We highlighted the importance of documentation at every stage of the data analytics pipeline. Documenting models, expectations, and data transformation processes fosters collaboration among data professionals and ensures transparency in data processes.
+- **Data Governance**: We touched upon the concept of data governance and how it is essential for maintaining data quality, security, and compliance. Tools like dbt, OpenMetadata support data governance efforts.
+- **Integration and Automation**: We integrated Apache Airflow into our data analytics platform to enable job scheduling and orchestration. Airflow allows for the automation of data workflows, ensuring data is processed and delivered at the right time.
+- **Continuous Improvement**: We encouraged a culture of continuous improvement in data analytics projects. Regularly reviewing and iterating on models, tests, and workflows helps keep data assets up-to-date and aligned with business needs.
+
+As you embark on your data analytics journey, remember that these tools and techniques are not static. The data landscape evolves, and your organization's requirements will change over time. Therefore, adaptability and a commitment to staying current with best practices are essential.
+
+By building a data analytics platform that combines the strengths of DuckDB, dbt, and Apache Airflow and following the principles and strategies outlined in this blog post, you are well-equipped to harness the power of data for informed decision-making, drive innovation, and gain a competitive edge in your industry.
+
+In closing, the fusion of these technologies empowers data teams to transform raw data into actionable insights, providing a solid foundation for data-driven success. We hope this blog has been a valuable resource on your data analytics journey, and we encourage you to explore, experiment, and continue building upon these foundations to unlock the full potential of your data.
+
+Thank you for joining us on this data-driven adventure. If you have any questions or would like to explore these topics further, please feel free to reach out. Here's to a future filled with data-driven possibilities!
 
 ## Supporting Links
 * <a href="https://www.getdbt.com/blog/data-modeling-techniques" target="_blank">4 data modeling techniques for modern data warehouses</a>

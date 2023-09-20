@@ -22,7 +22,7 @@ with DAG(
     # Create a dict of Operators
     dbt_tasks = dict()
     for node_id, node_info in nodes.items():
-        dbt_cmd = "seed" if node_info["resource_type"] == "seed" else "run"
+        dbt_cmd = "run" if node_info["resource_type"] == "model" else node_info["resource_type"]
         dbt_tasks[node_id] = BashOperator(
             task_id=".".join(
                 [
