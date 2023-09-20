@@ -582,7 +582,7 @@ Thank you for joining us on this data-driven adventure. If you have any question
 * <a href="https://atlan.com/openmetadata-dbt/?ref=/openmetadata-ingestion/" target="_blank">OpenMetadata and dbt: For an Integrated View of Data Assets</a>
 * <a href="https://www.astronomer.io/blog/airflow-and-dbt/#airflow-and-dbt-core" target="_blank">Airflow and dbt, Hand in Hand</a>
 * <a href="https://www.datafold.com/blog/running-dbt-with-airflow" target="_blank">Running dbt with Airflow</a>
-
+* <a href="https://www.astronomer.io/blog/airflow-dbt-1/" target="_blank">Building a Scalable Analytics Architecture With Airflow and dbt</a>
 
 
 
